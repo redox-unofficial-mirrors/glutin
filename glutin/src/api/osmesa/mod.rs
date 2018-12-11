@@ -4,6 +4,7 @@
     target_os = "freebsd",
     target_os = "netbsd",
     target_os = "openbsd",
+    target_os = "redox",
 ))]
 
 pub mod ffi {
@@ -70,6 +71,7 @@ impl OsMesaContext {
         opengl: &GlAttributes<&OsMesaContext>,
         size: dpi::PhysicalSize<u32>,
     ) -> Result<Self, CreationError> {
+        #[cfg(not(target_os = "redox"))]
         osmesa_sys::OsMesa::try_loading()
             .map_err(LoadingError::new)
             .map_err(|e| CreationError::NoBackendAvailable(Box::new(e)))?;
@@ -120,6 +122,18 @@ impl OsMesaContext {
                 attribs.push(minor as raw::c_int);
             }
         }
+
+        attribs.push(osmesa_sys::OSMESA_FORMAT);
+        attribs.push(osmesa_sys::OSMESA_BGRA as libc::c_int);
+
+        attribs.push(osmesa_sys::OSMESA_DEPTH_BITS);
+        attribs.push(24);
+
+        attribs.push(osmesa_sys::OSMESA_STENCIL_BITS);
+        attribs.push(8);
+
+        attribs.push(osmesa_sys::OSMESA_ACCUM_BITS);
+        attribs.push(0);
 
         // attribs array must be NULL terminated.
         attribs.push(0);
