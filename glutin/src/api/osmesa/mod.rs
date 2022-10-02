@@ -143,9 +143,7 @@ impl OsMesaContext {
         Ok(OsMesaContext {
             width: size.0,
             height: size.1,
-            buffer: std::iter::repeat(unsafe { std::mem::zeroed() })
-                .take((size.0 * size.1) as usize)
-                .collect(),
+            buffer: vec![0; (size.0 * size.1) as usize],
             context: unsafe {
                 let ctx =
                     osmesa_sys::OSMesaCreateContextAttribs(attribs.as_ptr(), std::ptr::null_mut());
@@ -157,6 +155,14 @@ impl OsMesaContext {
                 ctx
             },
         })
+    }
+
+    pub (crate) fn resize(&mut self, width: u32, height: u32) {
+        assert!(!self.is_current());
+
+        self.width = width;
+        self.height = height;
+        self.buffer = vec![0; (width * height) as usize];
     }
 
     #[inline]

@@ -47,7 +47,7 @@ impl Context {
         let orbclient_window = window.orbclient_window();
 
         Ok((window, Context {
-            osmesa: osmesa,
+            osmesa,
             flush: unsafe { mem::transmute::<_, extern "C" fn()>(flush) },
             window: orbclient_window,
         }))
@@ -64,8 +64,21 @@ impl Context {
     }
 
     #[inline]
-    pub fn resize(&self, _width: u32, _height: u32) {
-        unreachable!();
+    pub fn resize(&self, width: u32, height: u32) {
+        let is_current = self.is_current();
+        if is_current {
+            unsafe { self.make_not_current().unwrap() }
+        }
+
+        //TODO: is there a safer way to do this?
+        unsafe {
+            let ptr = &self.osmesa as *const osmesa::OsMesaContext as *mut osmesa::OsMesaContext;
+            (*ptr).resize(width, height);
+        }
+
+        if is_current {
+            unsafe { self.make_current().unwrap() }
+        }
     }
 
     #[inline]
@@ -77,9 +90,7 @@ impl Context {
 
     #[inline]
     pub unsafe fn make_not_current(&self) -> Result<(), ContextError> {
-        self.osmesa.make_not_current()?;
-        osmesa_sys::OSMesaPixelStore(osmesa_sys::OSMESA_Y_UP, 0);
-        Ok(())
+        self.osmesa.make_not_current()
     }
 
     #[inline]
@@ -103,10 +114,14 @@ impl Context {
 
         let mut win = self.window.write().unwrap();
         {
-            let win_fb = win.data_mut();
-            let osmesa_fb = &self.osmesa.buffer;
+            let data = win.data_mut();
+            assert_eq!(self.osmesa.buffer.len(), data.len());
             unsafe {
-                ptr::copy(osmesa_fb.as_ptr(), win_fb.as_mut_ptr() as *mut u32, win_fb.len());
+                ptr::copy(
+                    self.osmesa.buffer.as_ptr(),
+                    data.as_mut_ptr() as *mut u32,
+                    data.len()
+                )
             }
         }
         win.sync();
