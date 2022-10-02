@@ -30,6 +30,7 @@ pub mod run_return {
         target_os = "netbsd",
         target_os = "openbsd",
         target_os = "android",
+        target_os = "redox",
     ))]
     pub use winit::platform::run_return::*;
 }
