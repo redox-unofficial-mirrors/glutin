@@ -21,3 +21,6 @@ mod platform;
 #[cfg(target_os = "ios")]
 #[path = "ios/mod.rs"]
 mod platform;
+#[cfg(target_os = "redox")]
+#[path = "redox/mod.rs"]
+mod platform;

@@ -24,7 +24,7 @@ use std::os::raw;
 #[derive(Debug)]
 pub struct OsMesaContext {
     context: osmesa_sys::OSMesaContext,
-    buffer: Vec<u32>,
+    pub(crate) buffer: Vec<u32>,
     width: u32,
     height: u32,
 }
@@ -124,7 +124,7 @@ impl OsMesaContext {
         }
 
         attribs.push(osmesa_sys::OSMESA_FORMAT);
-        attribs.push(osmesa_sys::OSMESA_BGRA as libc::c_int);
+        attribs.push(osmesa_sys::OSMESA_BGRA as _);
 
         attribs.push(osmesa_sys::OSMESA_DEPTH_BITS);
         attribs.push(24);

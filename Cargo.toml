@@ -8,3 +8,7 @@ members = [
     "glutin_wgl_sys",
     "glutin_gles2_sys",
 ]
+
+[patch.crates-io]
+osmesa-sys = { git = "https://gitlab.redox-os.org/redox-os/osmesa-rs.git", branch = "redox" }
+winit = { git = "https://gitlab.redox-os.org/redox-os/winit.git", branch = "redox-0.27" }
