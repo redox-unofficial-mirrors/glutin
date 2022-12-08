@@ -1,9 +1,8 @@
-use std::{mem, ptr};
-use std::sync::{Arc, RwLock};
-use orbclient::Renderer;
+use raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle, RawDisplayHandle, RawWindowHandle};
+use std::mem;
+use std::sync::Mutex;
 use winit::dpi;
 use winit::event_loop::EventLoopWindowTarget;
-use winit::platform::redox::WindowExtRedox;
 use winit::window::WindowBuilder;
 
 use crate::{
@@ -11,10 +10,29 @@ use crate::{
     api::osmesa,
 };
 
+// Wrapper to get around lifetimes in GraphicsContext
+#[derive(Debug)]
+struct RawWindow {
+    display_handle: RawDisplayHandle,
+    window_handle: RawWindowHandle,
+}
+
+unsafe impl HasRawDisplayHandle for RawWindow {
+    fn raw_display_handle(&self) -> RawDisplayHandle {
+        self.display_handle
+    }
+}
+
+unsafe impl HasRawWindowHandle for RawWindow {
+    fn raw_window_handle(&self) -> RawWindowHandle {
+        self.window_handle
+    }
+}
+
 pub struct Context{
+    softbuffer: Mutex<softbuffer::GraphicsContext<RawWindow>>,
     osmesa: osmesa::OsMesaContext,
     flush: extern "C" fn(),
-    window: Arc<RwLock<orbclient::Window>>,
 }
 
 unsafe impl Send for Context {}
@@ -38,18 +56,25 @@ impl Context {
     ) -> Result<(winit::window::Window, Self), CreationError> {
         let window = wb.build(el)?;
 
+        let raw_window = RawWindow {
+            display_handle: window.raw_display_handle(),
+            window_handle: window.raw_window_handle(),
+        };
+        let softbuffer = match unsafe { softbuffer::GraphicsContext::new(raw_window) } {
+            Ok(ok) => Mutex::new(ok),
+            Err(err) => return Err(CreationError::NotSupported(err.to_string())),
+        };
+
         let physical_size = window.inner_size();
         let gl_attr = gl_attr.clone().map_sharing(|ctxt| &ctxt.osmesa);
         let osmesa = osmesa::OsMesaContext::new(pf_reqs, &gl_attr, physical_size)?;
 
         let flush = osmesa.get_proc_address("glFlush");
 
-        let orbclient_window = window.orbclient_window();
-
         Ok((window, Context {
+            softbuffer,
             osmesa,
             flush: unsafe { mem::transmute::<_, extern "C" fn()>(flush) },
-            window: orbclient_window,
         }))
     }
 
@@ -112,19 +137,11 @@ impl Context {
     pub fn swap_buffers(&self) -> Result<(), ContextError> {
         (self.flush)();
 
-        let mut win = self.window.write().unwrap();
-        {
-            let data = win.data_mut();
-            assert_eq!(self.osmesa.buffer.len(), data.len());
-            unsafe {
-                ptr::copy(
-                    self.osmesa.buffer.as_ptr(),
-                    data.as_mut_ptr() as *mut u32,
-                    data.len()
-                )
-            }
-        }
-        win.sync();
+        self.softbuffer.lock().unwrap().set_buffer(
+            &self.osmesa.buffer,
+            self.osmesa.width as u16,
+            self.osmesa.height as u16
+        );
 
         Ok(())
     }

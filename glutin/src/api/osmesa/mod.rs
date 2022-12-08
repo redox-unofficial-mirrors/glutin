@@ -25,8 +25,8 @@ use std::os::raw;
 pub struct OsMesaContext {
     context: osmesa_sys::OSMesaContext,
     pub(crate) buffer: Vec<u32>,
-    width: u32,
-    height: u32,
+    pub(crate) width: u32,
+    pub(crate) height: u32,
 }
 
 #[derive(Debug)]

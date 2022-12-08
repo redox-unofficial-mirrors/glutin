@@ -68,5 +68,6 @@ parking_lot = "0.12"
 log = "0.4"
 
 [target.'cfg(target_os = "redox")'.dependencies]
-orbclient = "0.3"
 osmesa-sys = "0.1"
+raw-window-handle = "0.5"
+softbuffer = { git = "https://github.com/jackpot51/softbuffer", branch = "redox-0.1.1" }
