@@ -14,7 +14,7 @@ use crate::surface::SurfaceTypeTrait;
 
 use super::config::Config;
 use super::display::Display;
-use super::surface::{Surface, SurfaceInner};
+use super::surface::Surface;
 
 #[derive(Debug)]
 pub struct NotCurrentContext {

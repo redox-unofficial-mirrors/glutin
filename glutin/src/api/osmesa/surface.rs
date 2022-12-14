@@ -6,7 +6,7 @@ use std::ffi::CStr;
 use std::marker::PhantomData;
 use std::num::NonZeroU32;
 use std::sync::Mutex;
-use std::{fmt, mem, ptr};
+use std::{fmt, mem};
 
 use crate::context::PossiblyCurrentGlContext;
 use crate::display::{GetGlDisplay, GlDisplay};
@@ -61,7 +61,7 @@ impl SurfaceInner {
             OSMesaMakeCurrent(
                 ctx,
                 self.buffer.as_mut_ptr() as *mut _,
-                0x1401, // TODO: what is this type?
+                0x1401, // GL_UNSIGNED_BYTE
                 self.width.try_into().unwrap(),
                 self.height.try_into().unwrap(),
             )
