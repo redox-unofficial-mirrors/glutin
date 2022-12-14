@@ -6,5 +6,7 @@ pub mod cgl;
 pub mod egl;
 #[cfg(glx_backend)]
 pub mod glx;
+#[cfg(osmesa_backend)]
+pub mod osmesa;
 #[cfg(wgl_backend)]
 pub mod wgl;

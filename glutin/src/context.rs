@@ -23,6 +23,11 @@ use crate::api::egl::context::{
 use crate::api::glx::context::{
     NotCurrentContext as NotCurrentGlxContext, PossiblyCurrentContext as PossiblyCurrentGlxContext,
 };
+#[cfg(osmesa_backend)]
+use crate::api::osmesa::context::{
+    NotCurrentContext as NotCurrentOsMesaContext,
+    PossiblyCurrentContext as PossiblyCurrentOsMesaContext,
+};
 #[cfg(wgl_backend)]
 use crate::api::wgl::context::{
     NotCurrentContext as NotCurrentWglContext, PossiblyCurrentContext as PossiblyCurrentWglContext,
@@ -371,6 +376,10 @@ pub enum NotCurrentContext {
     /// The CGL context.
     #[cfg(cgl_backend)]
     Cgl(NotCurrentCglContext),
+
+    /// The OSMesa context.
+    #[cfg(osmesa_backend)]
+    OsMesa(NotCurrentOsMesaContext),
 }
 
 impl NotCurrentGlContext for NotCurrentContext {
@@ -403,6 +412,10 @@ impl<T: SurfaceTypeTrait> NotCurrentGlContextSurfaceAccessor<T> for NotCurrentCo
             (Self::Cgl(context), Surface::Cgl(surface)) => {
                 Ok(PossiblyCurrentContext::Cgl(context.make_current(surface)?))
             },
+            #[cfg(osmesa_backend)]
+            (Self::OsMesa(context), Surface::OsMesa(surface)) => {
+                Ok(PossiblyCurrentContext::OsMesa(context.make_current(surface)?))
+            },
             _ => unreachable!(),
         }
     }
@@ -428,6 +441,10 @@ impl<T: SurfaceTypeTrait> NotCurrentGlContextSurfaceAccessor<T> for NotCurrentCo
             #[cfg(cgl_backend)]
             (Self::Cgl(context), Surface::Cgl(draw), Surface::Cgl(read)) => {
                 Ok(PossiblyCurrentContext::Cgl(context.make_current_draw_read(draw, read)?))
+            },
+            #[cfg(osmesa_backend)]
+            (Self::OsMesa(context), Surface::OsMesa(draw), Surface::OsMesa(read)) => {
+                Ok(PossiblyCurrentContext::OsMesa(context.make_current_draw_read(draw, read)?))
             },
             _ => unreachable!(),
         }
@@ -491,6 +508,10 @@ pub enum PossiblyCurrentContext {
     /// The CGL context.
     #[cfg(cgl_backend)]
     Cgl(PossiblyCurrentCglContext),
+
+    /// The OSMesa context.
+    #[cfg(osmesa_backend)]
+    OsMesa(PossiblyCurrentOsMesaContext),
 }
 
 impl PossiblyCurrentGlContext for PossiblyCurrentContext {
@@ -520,6 +541,8 @@ impl<T: SurfaceTypeTrait> PossiblyCurrentContextGlSurfaceAccessor<T> for Possibl
             (Self::Wgl(context), Surface::Wgl(surface)) => context.make_current(surface),
             #[cfg(cgl_backend)]
             (Self::Cgl(context), Surface::Cgl(surface)) => context.make_current(surface),
+            #[cfg(osmesa_backend)]
+            (Self::OsMesa(context), Surface::OsMesa(surface)) => context.make_current(surface),
             _ => unreachable!(),
         }
     }
@@ -544,6 +567,10 @@ impl<T: SurfaceTypeTrait> PossiblyCurrentContextGlSurfaceAccessor<T> for Possibl
             },
             #[cfg(cgl_backend)]
             (Self::Cgl(context), Surface::Cgl(draw), Surface::Cgl(read)) => {
+                context.make_current_draw_read(draw, read)
+            },
+            #[cfg(osmesa_backend)]
+            (Self::OsMesa(context), Surface::OsMesa(draw), Surface::OsMesa(read)) => {
                 context.make_current_draw_read(draw, read)
             },
             _ => unreachable!(),
@@ -593,6 +620,10 @@ pub enum RawContext {
     /// Pointer to NSOpenGLContext.
     #[cfg(cgl_backend)]
     Cgl(*const ffi::c_void),
+
+    /// Raw OSMesa context.
+    #[cfg(osmesa_backend)]
+    OsMesa(*const ffi::c_void),
 }
 
 /// Pick `GlProfile` and `Version` based on the provided params.

@@ -30,7 +30,13 @@ use winit::platform::unix;
 #[cfg(x11_platform)]
 use winit::platform::unix::WindowBuilderExtUnix;
 
-#[cfg(all(not(egl_backend), not(glx_backend), not(wgl_backend), not(cgl_backend)))]
+#[cfg(all(
+    not(egl_backend),
+    not(glx_backend),
+    not(wgl_backend),
+    not(cgl_backend),
+    not(osmesa_backend)
+))]
 compile_error!("Please select at least one api backend");
 
 /// The helper to perform [`Display`] creation and OpenGL platform
@@ -150,6 +156,9 @@ fn create_display<T>(
 
     #[cfg(wgl_backend)]
     let _preference = DisplayApiPreference::Wgl(_raw_window_handle);
+
+    #[cfg(osmesa_backend)]
+    let _preference = DisplayApiPreference::OsMesa;
 
     #[cfg(all(egl_backend, glx_backend))]
     let _preference = match _api_preference {

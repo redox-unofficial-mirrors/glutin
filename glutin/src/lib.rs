@@ -20,7 +20,13 @@
 #![cfg_attr(feature = "cargo-clippy", deny(warnings))]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
-#[cfg(all(not(egl_backend), not(glx_backend), not(wgl_backend), not(cgl_backend)))]
+#[cfg(all(
+    not(egl_backend),
+    not(glx_backend),
+    not(wgl_backend),
+    not(cgl_backend),
+    not(osmesa_backend)
+))]
 compile_error!("Please select at least one api backend");
 
 pub mod api;
@@ -53,6 +59,7 @@ pub(crate) mod private {
     ///    Enum::Glx(foo) => foo.something(),
     ///    Enum::Wgl(foo) => foo.something(),
     ///    Enum::Cgl(foo) => foo.something(),
+    ///    Enum::OsMesa(foo) => foo.something(),
     /// }
     /// ```
     /// The result can be converted to another enum by adding `; as AnotherEnum`
@@ -67,6 +74,8 @@ pub(crate) mod private {
                 $enum::Wgl($($c1)*) => $enum2::Wgl($x),
                 #[cfg(cgl_backend)]
                 $enum::Cgl($($c1)*) => $enum2::Cgl($x),
+                #[cfg(osmesa_backend)]
+                $enum::OsMesa($($c1)*) => $enum2::OsMesa($x),
             }
         };
         ($what:ident; $enum:ident ( $($c1:tt)* ) => $x:expr) => {
@@ -79,6 +88,8 @@ pub(crate) mod private {
                 $enum::Wgl($($c1)*) => $x,
                 #[cfg(cgl_backend)]
                 $enum::Cgl($($c1)*) => $x,
+                #[cfg(osmesa_backend)]
+                $enum::OsMesa($($c1)*) => $x,
             }
         };
     }

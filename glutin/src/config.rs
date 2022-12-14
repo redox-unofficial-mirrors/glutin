@@ -18,6 +18,8 @@ use crate::api::cgl::config::Config as CglConfig;
 use crate::api::egl::config::Config as EglConfig;
 #[cfg(glx_backend)]
 use crate::api::glx::config::Config as GlxConfig;
+#[cfg(osmesa_backend)]
+use crate::api::osmesa::config::Config as OsMesaConfig;
 #[cfg(wgl_backend)]
 use crate::api::wgl::config::Config as WglConfig;
 
@@ -426,6 +428,10 @@ pub enum Config {
     /// The CGL config.
     #[cfg(cgl_backend)]
     Cgl(CglConfig),
+
+    /// The OSMesa config.
+    #[cfg(osmesa_backend)]
+    OsMesa(OsMesaConfig),
 }
 
 impl GlConfig for Config {
@@ -505,6 +511,10 @@ pub enum RawConfig {
     /// NSOpenGLPixelFormat.
     #[cfg(cgl_backend)]
     Cgl(*const std::ffi::c_void),
+
+    /// Raw OSMesa config..
+    #[cfg(osmesa_backend)]
+    OsMesa(*const std::ffi::c_void),
 }
 
 impl AsRawConfig for Config {

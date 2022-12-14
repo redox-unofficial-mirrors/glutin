@@ -17,6 +17,8 @@ use crate::api::cgl::surface::Surface as CglSurface;
 use crate::api::egl::surface::Surface as EglSurface;
 #[cfg(glx_backend)]
 use crate::api::glx::surface::Surface as GlxSurface;
+#[cfg(osmesa_backend)]
+use crate::api::osmesa::surface::Surface as OsMesaSurface;
 #[cfg(wgl_backend)]
 use crate::api::wgl::surface::Surface as WglSurface;
 
@@ -273,6 +275,10 @@ pub enum Surface<T: SurfaceTypeTrait> {
     /// The CGL surface.
     #[cfg(cgl_backend)]
     Cgl(CglSurface<T>),
+
+    /// The OSMesa surface.
+    #[cfg(osmesa_backend)]
+    OsMesa(OsMesaSurface<T>),
 }
 
 impl<T: SurfaceTypeTrait> GlSurface<T> for Surface<T> {
@@ -313,6 +319,10 @@ impl<T: SurfaceTypeTrait> GlSurface<T> for Surface<T> {
             (Self::Wgl(surface), PossiblyCurrentContext::Wgl(context)) => {
                 surface.swap_buffers(context)
             },
+            #[cfg(osmesa_backend)]
+            (Self::OsMesa(surface), PossiblyCurrentContext::OsMesa(context)) => {
+                surface.swap_buffers(context)
+            },
             _ => unreachable!(),
         }
     }
@@ -333,6 +343,10 @@ impl<T: SurfaceTypeTrait> GlSurface<T> for Surface<T> {
             },
             #[cfg(wgl_backend)]
             (Self::Wgl(surface), PossiblyCurrentContext::Wgl(context)) => {
+                surface.set_swap_interval(context, interval)
+            },
+            #[cfg(osmesa_backend)]
+            (Self::OsMesa(surface), PossiblyCurrentContext::OsMesa(context)) => {
                 surface.set_swap_interval(context, interval)
             },
             _ => unreachable!(),
@@ -357,6 +371,10 @@ impl<T: SurfaceTypeTrait> GlSurface<T> for Surface<T> {
             (Self::Wgl(surface), PossiblyCurrentContext::Wgl(context)) => {
                 surface.is_current(context)
             },
+            #[cfg(osmesa_backend)]
+            (Self::OsMesa(surface), PossiblyCurrentContext::OsMesa(context)) => {
+                surface.is_current(context)
+            },
             _ => unreachable!(),
         }
     }
@@ -379,6 +397,10 @@ impl<T: SurfaceTypeTrait> GlSurface<T> for Surface<T> {
             (Self::Wgl(surface), PossiblyCurrentContext::Wgl(context)) => {
                 surface.is_current_draw(context)
             },
+            #[cfg(osmesa_backend)]
+            (Self::OsMesa(surface), PossiblyCurrentContext::OsMesa(context)) => {
+                surface.is_current_draw(context)
+            },
             _ => unreachable!(),
         }
     }
@@ -399,6 +421,10 @@ impl<T: SurfaceTypeTrait> GlSurface<T> for Surface<T> {
             },
             #[cfg(wgl_backend)]
             (Self::Wgl(surface), PossiblyCurrentContext::Wgl(context)) => {
+                surface.is_current_read(context)
+            },
+            #[cfg(osmesa_backend)]
+            (Self::OsMesa(surface), PossiblyCurrentContext::OsMesa(context)) => {
                 surface.is_current_read(context)
             },
             _ => unreachable!(),
@@ -424,6 +450,10 @@ impl<T: SurfaceTypeTrait> GlSurface<T> for Surface<T> {
             },
             #[cfg(wgl_backend)]
             (Self::Wgl(surface), PossiblyCurrentContext::Wgl(context)) => {
+                surface.resize(context, width, height)
+            },
+            #[cfg(osmesa_backend)]
+            (Self::OsMesa(surface), PossiblyCurrentContext::OsMesa(context)) => {
                 surface.resize(context, width, height)
             },
             _ => unreachable!(),
@@ -498,6 +528,10 @@ pub enum RawSurface {
     /// Pointer to `NSView`.
     #[cfg(cgl_backend)]
     Cgl(*const std::ffi::c_void),
+
+    /// OSMesa
+    #[cfg(osmesa_backend)]
+    OsMesa(*const std::ffi::c_void),
 }
 
 /// The rect that is being used in various surface operations.

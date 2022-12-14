@@ -24,6 +24,8 @@ use crate::api::egl::display::Display as EglDisplay;
 use crate::api::glx::display::Display as GlxDisplay;
 #[cfg(glx_backend)]
 use crate::api::glx::XlibErrorHookRegistrar;
+#[cfg(osmesa_backend)]
+use crate::api::osmesa::display::Display as OsMesaDisplay;
 #[cfg(wgl_backend)]
 use crate::api::wgl::display::Display as WglDisplay;
 
@@ -182,6 +184,10 @@ pub enum Display {
     /// The CGL display.
     #[cfg(cgl_backend)]
     Cgl(CglDisplay),
+
+    /// The OSMesa display.
+    #[cfg(osmesa_backend)]
+    OsMesa(OsMesaDisplay),
 }
 
 impl Display {
@@ -244,6 +250,10 @@ impl Display {
             },
             #[cfg(cgl_backend)]
             DisplayApiPreference::Cgl => unsafe { Ok(Self::Cgl(CglDisplay::new(display)?)) },
+            #[cfg(osmesa_backend)]
+            DisplayApiPreference::OsMesa => unsafe {
+                Ok(Self::OsMesa(OsMesaDisplay::new(display)?))
+            },
         }
     }
 }
@@ -276,6 +286,10 @@ impl GlDisplay for Display {
             Self::Cgl(display) => unsafe {
                 Ok(Box::new(display.find_configs(template)?.into_iter().map(Config::Cgl)))
             },
+            #[cfg(osmesa_backend)]
+            Self::OsMesa(display) => unsafe {
+                Ok(Box::new(display.find_configs(template)?.into_iter().map(Config::OsMesa)))
+            },
         }
     }
 
@@ -300,6 +314,10 @@ impl GlDisplay for Display {
             #[cfg(cgl_backend)]
             (Self::Cgl(display), Config::Cgl(config)) => unsafe {
                 Ok(NotCurrentContext::Cgl(display.create_context(config, context_attributes)?))
+            },
+            #[cfg(osmesa_backend)]
+            (Self::OsMesa(display), Config::OsMesa(config)) => unsafe {
+                Ok(NotCurrentContext::OsMesa(display.create_context(config, context_attributes)?))
             },
             _ => unreachable!(),
         }
@@ -327,6 +345,10 @@ impl GlDisplay for Display {
             (Self::Cgl(display), Config::Cgl(config)) => unsafe {
                 Ok(Surface::Cgl(display.create_window_surface(config, surface_attributes)?))
             },
+            #[cfg(osmesa_backend)]
+            (Self::OsMesa(display), Config::OsMesa(config)) => unsafe {
+                Ok(Surface::OsMesa(display.create_window_surface(config, surface_attributes)?))
+            },
             _ => unreachable!(),
         }
     }
@@ -353,6 +375,10 @@ impl GlDisplay for Display {
             (Self::Cgl(display), Config::Cgl(config)) => unsafe {
                 Ok(Surface::Cgl(display.create_pbuffer_surface(config, surface_attributes)?))
             },
+            #[cfg(osmesa_backend)]
+            (Self::OsMesa(display), Config::OsMesa(config)) => unsafe {
+                Ok(Surface::OsMesa(display.create_pbuffer_surface(config, surface_attributes)?))
+            },
             _ => unreachable!(),
         }
     }
@@ -378,6 +404,10 @@ impl GlDisplay for Display {
             #[cfg(cgl_backend)]
             (Self::Cgl(display), Config::Cgl(config)) => unsafe {
                 Ok(Surface::Cgl(display.create_pixmap_surface(config, surface_attributes)?))
+            },
+            #[cfg(osmesa_backend)]
+            (Self::OsMesa(display), Config::OsMesa(config)) => unsafe {
+                Ok(Surface::OsMesa(display.create_pixmap_surface(config, surface_attributes)?))
             },
             _ => unreachable!(),
         }
@@ -449,6 +479,12 @@ pub enum DisplayApiPreference {
     #[cfg(cgl_backend)]
     Cgl,
 
+    /// Use only OSMesa.
+    ///
+    /// The only option on Redox OS for now.
+    #[cfg(osmesa_backend)]
+    OsMesa,
+
     /// Prefer EGL and fallback to GLX.
     ///
     /// See [`Egl`] and [`Glx`] to decide what you want.
@@ -505,6 +541,8 @@ impl fmt::Debug for DisplayApiPreference {
             DisplayApiPreference::WglThenEgl(_) => "WglThenEgl",
             #[cfg(cgl_backend)]
             DisplayApiPreference::Cgl => "Cgl",
+            #[cfg(osmesa_backend)]
+            DisplayApiPreference::OsMesa => "OsMesa",
         };
 
         f.write_fmt(format_args!("DisplayApiPreference::{}", api))
@@ -574,4 +612,8 @@ pub enum RawDisplay {
     /// Raw display is CGL.
     #[cfg(cgl_backend)]
     Cgl,
+
+    /// Raw display is OSMesa.
+    #[cfg(osmesa_backend)]
+    OsMesa,
 }
