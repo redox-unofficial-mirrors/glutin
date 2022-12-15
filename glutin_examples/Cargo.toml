@@ -11,12 +11,13 @@ edition = "2021"
 publish = false
 
 [features]
-default = ["egl", "glx", "x11", "wayland", "wgl"]
+default = ["egl", "glx", "x11", "wayland", "wgl", "osmesa"]
 egl = ["glutin-winit/egl", "png"]
 glx = ["glutin-winit/glx"]
 wgl = ["glutin-winit/wgl"]
 x11 = ["glutin-winit/x11"]
 wayland = ["glutin-winit/wayland", "winit/wayland-dlopen", "winit/wayland-csd-adwaita-notitle"]
+osmesa = ["glutin-winit/osmesa"]
 
 [dependencies]
 glutin = { path = "../glutin", default-features = false }

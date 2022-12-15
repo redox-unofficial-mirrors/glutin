@@ -21,6 +21,6 @@ fn main() {
         glx_backend: { all(feature = "glx", x11_platform, not(wasm)) },
         wgl_backend: { all(feature = "wgl", windows, not(wasm)) },
         cgl_backend: { all(macos, not(wasm)) },
-        osmesa_backend: { redox },
+        osmesa_backend: { all(feature = "osmesa", free_unix) },
     }
 }

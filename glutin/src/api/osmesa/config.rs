@@ -2,6 +2,8 @@ use super::display::Display;
 use crate::config::{Api, AsRawConfig, ColorBufferType, ConfigSurfaceTypes, GlConfig, RawConfig};
 use crate::display::GetGlDisplay;
 use crate::private::Sealed;
+#[cfg(x11_platform)]
+use crate::platform::x11::{X11GlConfigExt, X11VisualInfo};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Config {
@@ -55,6 +57,13 @@ impl GetGlDisplay for Config {
 
     fn display(&self) -> Self::Target {
         self.display.clone()
+    }
+}
+
+#[cfg(x11_platform)]
+impl X11GlConfigExt for Config {
+    fn x11_visual(&self) -> Option<X11VisualInfo> {
+        None
     }
 }
 

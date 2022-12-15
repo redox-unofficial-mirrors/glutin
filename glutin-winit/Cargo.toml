@@ -10,12 +10,13 @@ repository = "https://github.com/rust-windowing/glutin"
 edition = "2021"
 
 [features]
-default = ["egl", "glx", "x11", "wayland", "wgl"]
+default = ["egl", "glx", "x11", "wayland", "wgl", "osmesa"]
 egl = ["glutin/egl"]
 glx = ["glutin/glx", "glutin/x11", "winit/x11", "x11"]
 wgl = ["glutin/wgl"]
 x11 = ["glutin/x11", "winit/x11"]
 wayland = ["glutin/wayland", "winit/wayland"]
+osmesa = ["glutin/osmesa"]
 
 [dependencies]
 winit = { version = "0.27.5", default-features = false }
