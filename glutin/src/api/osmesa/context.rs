@@ -24,6 +24,9 @@ pub struct NotCurrentContext {
 
 impl NotCurrentContext {
     pub(crate) fn new(config: Config, attributes: &ContextAttributes) -> Self {
+        #[cfg(not(target_os = "redox"))]
+        OsMesa::try_loading().expect("failed to load osmesa");
+
         let mut attribs = Vec::new();
 
         if let Some(profile) = attributes.profile {
