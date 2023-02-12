@@ -9,6 +9,3 @@ members = [
     "glutin_gles2_sys",
     "glutin_osmesa_sys",
 ]
-
-[patch.crates-io]
-winit = { git = "https://gitlab.redox-os.org/redox-os/winit.git", branch = "redox-support" }
